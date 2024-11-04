@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <title>Simple Incremental</title>
+</head>
+<body>
+    <div id="title">
+        <div id="moving-text">I made this game to learn Vue.js :)</div>
+    </div>
+    <div id="app">
+        <Display :value="value"></Display>
+        <Incrementer :value="value" @increment="value += click_multiplier"></Incrementer>
+        <FactoryIncrement :factory="factory" :factory_price="factory_price" @buy-factory="buyFactory"></FactoryIncrement>
+        <multiplyclick :click_multiplier="click_multiplier" @buy-multiplier="buyMultiplier"></multiplyclick>
+    </div>
+
+    <script>
+        const Incrementer = {
+            props: ['value'],
+            template: `
+                <div>
+                    <button id="increment_button" @click="$emit('increment')">Increment</button>    
+                </div>
+            `
+        };
+
+        const Factoryincrement = {
+            props: ['factory', 'factory_price'],
+            template: `
+                <div>
+                    <button id="increment_button" @click="addFactory">Buy Points Factory for {{ factory_price }} (you have {{ factory }} factories)</button>    
+                </div>
+            `,
+            methods: {
+                addFactory(){
+                    this.$emit("buy-factory");
+                }
+            }
+        };
+
+        const Multiplyclick = {
+            props: ['click_multiplier'],
+            template: `
+                <div>
+                    <button id="click_multiply" @click="$emit('buy-multiplier')">Buy Click multiplier for {{ Math.pow(2, click_multiplier) }} (current multiplier: {{click_multiplier}}x)</button>    
+                </div>
+            `,
+        }
+
+        const Display = {
+            props: ['value'],
+            template: `<div id="value-display">{{ value }} Points</div>`
+        }
+
+        const app = Vue.createApp({
+            data(){
+                return {
+                    value: 0,
+                    factory: 0,
+                    factory_price: 10,
+                    click_multiplier: 1,
+                };
+            },
+            mounted(){
+                this.intervalId = setInterval(() => {
+                    this.value += this.factory;
+                }, 1000);
+            },
+            beforeUnmount(){
+                clearInterval(this.intervalId);
+            },
+            methods: {
+                buyFactory(){
+                    if (this.value >= this.factory_price){
+                        this.value -= this.factory_price;
+                        this.factory++;
+                        this.factory_price = Math.floor(this.factory_price * 1.2);
+                    }
+                },
+
+                buyMultiplier(){
+                    if (this.value >= Math.pow(2, this.click_multiplier)){
+                        this.value -= Math.pow(2, this.click_multiplier);
+                        this.click_multiplier *= 2;
+                    }
+                }
+            }
+        });
+
+        app.component('Incrementer', Incrementer);
+        app.component('Display', Display);
+        app.component('Factoryincrement', Factoryincrement);
+        app.component('Multiplyclick', Multiplyclick);
+
+        app.mount("#app");
+    </script>
+</body>
+</html>
